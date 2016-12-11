@@ -32,12 +32,13 @@ for t=Tstep:Tstep:Tsim
     % update current
     dI_dT = -Iout/tau;
     Iout = Iout+dI_dT*Tstep;
-    spikedNeurons = find(Iout>0.5*inputNeurons);
-    if(~spikedNeurons)
-        spike(spikedNeurons) = Iout;
+    spikedNeurons = find(Iout>0.3*inputNeurons);
+    if(~isempty(spikedNeurons))
+        msg = sprintf('spiked %d at t = %d',spikedNeurons,t); disp(msg);
+        spike(spikedNeurons) = Iout(spikedNeurons);
         Iout(spikedNeurons) = 0;
     else
-        spike = 0;
+        spike = zeros(outputNeurons,1);
     end
     
     
