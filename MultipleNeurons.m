@@ -2,7 +2,7 @@ close all;
 clear;
 clc;
 % Implementation of single spiking neuron with multiple inputs 
-inputNeurons = 10;
+inputNeurons = 5;
 outputNeurons =2;
 spikeEvents = 10;
 % Neuron Spike Matrix ( Each Row represents a set of spikes)
@@ -19,7 +19,7 @@ spikedPlot = [];
 spike =zeros(outputNeurons,1);
 tLastSpike =0;
 Iinput = 0;
-figHandle = figure ('Position',[100,100,1049,895]);
+figHandle = figure ('Position',[10,10,1049,565]);
 for t=Tstep:Tstep:Tsim
     index = find(Tspike<=t);
     msg = sprintf('t = %d',t); disp(msg);
@@ -35,7 +35,7 @@ for t=Tstep:Tstep:Tsim
     % update current
     %dI_dT = -Iout/tau; % Linear
     tp = t-tLastSpike;
-    dI_dT = -Iout/tau+Iinput/tau/(1+tau).*exp(-tp/tau).*(1-tp/tau);
+    dI_dT = Iout/tau/(1+tau).*exp(-tp/tau).*(1-tp/tau);
     Iout = Iout+dI_dT*Tstep;
     
     % Code Simulation Error Checking
