@@ -3,8 +3,8 @@ clear;
 clc;
 % Implementation of single spiking neuron with multiple inputs 
 inputNeurons = 10;
-outputNeurons = 10;
-spikeEvents = 20;
+outputNeurons =2;
+spikeEvents = 10;
 % Neuron Spike Matrix ( Each Row represents a set of spikes)
 Iin = randi([0 1],inputNeurons,spikeEvents);
 Tspike = randperm(200,spikeEvents)*1E-3;
@@ -17,24 +17,37 @@ IoutPlot = [];
 TimePlot = [];
 spikedPlot = [];
 spike =zeros(outputNeurons,1);
-
+tLastSpike =0;
+Iinput = 0;
+figHandle = figure ('Position',[100,100,1049,895]);
 for t=Tstep:Tstep:Tsim
     index = find(Tspike<=t);
     msg = sprintf('t = %d',t); disp(msg);
-    
     if ~isempty(index)
+        Iinput = wts*Iin(:,index);
         Iout = Iout+wts*Iin(:,index);
         Tspike(index) = []; % remove selected point
         Iin(:,index) = [];  % remove
+        tLastSpike = t;
     end
     
    
     % update current
-    dI_dT = -Iout/tau;
+    %dI_dT = -Iout/tau; % Linear
+    tp = t-tLastSpike;
+    dI_dT = -Iout/tau+Iinput/tau/(1+tau).*exp(-tp/tau).*(1-tp/tau);
     Iout = Iout+dI_dT*Tstep;
+    
+    % Code Simulation Error Checking
+%     err = find(Iout<0);
+%     if(~isempty(err))
+%         Iout(err) = 0;
+%     end
+    
+    % check for spiking
     spikedNeurons = find(Iout>0.3*inputNeurons);
     if(~isempty(spikedNeurons))
-        msg = sprintf('spiked %d at t = %d',spikedNeurons,t); disp(msg);
+        msg = sprintf('spiked %s at t = %d\n',48+spikedNeurons,t); disp(msg);
         spike(spikedNeurons) = Iout(spikedNeurons);
         Iout(spikedNeurons) = 0;
     else
@@ -43,16 +56,16 @@ for t=Tstep:Tstep:Tsim
     
     
     
+    
     IoutPlot = [IoutPlot Iout];
     spikedPlot = [spikedPlot spike];
     TimePlot = [TimePlot t];
-    figure (1)
-    plot(TimePlot,IoutPlot);
-    figure(2)
-    plot(TimePlot,spikedPlot);
     
+    subplot(1,2,1);    plot(TimePlot,IoutPlot);
+    subplot(1,2,2);    plot(TimePlot,spikedPlot);
+
     pause(0.001);
 end
 
-surf(wts)
+surf(wts);
 title('weights')
