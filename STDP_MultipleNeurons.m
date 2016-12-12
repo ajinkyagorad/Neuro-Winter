@@ -1,13 +1,16 @@
 close all;
 clear;
 clc;
-% Implementation of single spiking neuron with multiple inputs 
+%% NOTES
+% those inputs with less input spike intensity weakly modify weights !!
+%% Implementation of single spiking neuron with multiple inputs 
 inputNeurons = 12;
 outputNeurons =5;
 spikeEvents = 20;
 % Neuron Spike Matrix ( Each Row represents a set of spikes)
 % Iin = randi([0 1],inputNeurons,spikeEvents);      % Random Input
 Iin = repmat( [ 1 1 1 1 0 0 0 0 1 1 1 1]',[1 spikeEvents]);
+%Iin = 0.9*Iin+0.1;
 Tspike = sort(randperm(200,spikeEvents))*1E-3;    % Times for input Iin spikes (must be unique)
 msg = sprintf('Time-Input Spikes'); disp(msg);
 for i = 1:length(Tspike)
@@ -15,7 +18,9 @@ for i = 1:length(Tspike)
     
 end
 Iout = zeros(outputNeurons,1);              % Output Current as time
-wts = rand(outputNeurons,inputNeurons);     % Weights matrix for input and output neuron
+Wmax = 1
+Wmin = 0.2
+wts = (Wmax-Wmin)*rand(outputNeurons,inputNeurons)+Wmin;     % Weights matrix for input and output neuron
 Tstep = 1E-3;
 Tsim = 200E-3;
 tau = 5E-3;
@@ -77,12 +82,14 @@ for t=Tstep:Tstep:Tsim
                 heaviside(-(deltaT)).*exp((deltaT)/5E-3);
     %idZero = find(tPreSpike(spikedNeurons) == t);
     delta_wts(deltaT==0) = -1;
-    delta_wts
-    %wts= wts+0.1*delta_wts;   % update weights
-    pos = find(delta_wts>0);
-    neg = find(delta_wts<0);
-    wts(pos) = wts(pos)+0.1*delta_wts(pos).*(1-wts(pos));
-    wts(neg) = wts(neg)+0.1*delta_wts(neg).*wts(neg);
+    %Add weighted contribution of current into weight change
+    %delta_wts = (delta_wts.*repmat(Iinput',[outputNeurons 1]));
+   
+    wts= wts+0.1*delta_wts.*(Wmax-wts).*(wts-Wmin).*heaviside((wts-Wmin).*(Wmax-wts));   % update weights
+%     pos = find(delta_wts>0);
+%     neg = find(delta_wts<0);
+%     wts(pos) = wts(pos)+0.1*delta_wts(pos).*(1-wts(pos));
+%     wts(neg) = wts(neg)+0.1*delta_wts(neg).* wts(neg);
     
     
     
@@ -94,6 +101,7 @@ for t=Tstep:Tstep:Tsim
     subplot(N,M,2);    plot(TimePlot,spikedPlot); title('Output Spikes vs Time');
     subplot(N,M,3);    surf(wts);    title('Weights');
     subplot(N,M,4);    surf(Iin);    title('InputCurrent');
+    
     pause(0.001);
 end
 
