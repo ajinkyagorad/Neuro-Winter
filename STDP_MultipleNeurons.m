@@ -3,7 +3,7 @@ clear;
 clc;
 % Implementation of single spiking neuron with multiple inputs 
 inputNeurons = 12;
-outputNeurons =2;
+outputNeurons =5;
 spikeEvents = 20;
 % Neuron Spike Matrix ( Each Row represents a set of spikes)
 % Iin = randi([0 1],inputNeurons,spikeEvents);      % Random Input
@@ -50,6 +50,9 @@ for t=Tstep:Tstep:Tsim
    % dI_dT = Iout/tau/(1+tau).*exp(-tp/tau).*(1-tp/tau);
     Iout = Iout+dI_dT*Tstep;        
     
+    % calc error correction
+    err  = find(Iout<0);
+    Iout(err) = 0;
    
     % check for spiking accoring to threshold
     spikedNeurons = find(Iout>0.3*inputNeurons);    
@@ -57,9 +60,9 @@ for t=Tstep:Tstep:Tsim
         msg = sprintf('spiked %s at t = %d\n',48+spikedNeurons,t); disp(msg);
         PostSpike(spikedNeurons) = Iout(spikedNeurons);
         Iout(spikedNeurons) = 0;    % reset the spike  neuron current to zero
-        tPostSpike(spikedNeurons) = t;     % save the spiking time
+        tPostSpike(spikedNeurons) = t+Tstep;     % save the spiking time
         
-        %apply LTP here
+        
         
         
     else
@@ -69,11 +72,17 @@ for t=Tstep:Tstep:Tsim
     %Weights Update
     tPostSpikeM = repmat( tPostSpike, [1 length(tPreSpike)]);
     tPreSpikeM = repmat( tPreSpike', [length(tPostSpike) 1]);
-    delta_wts = heaviside(tPostSpikeM-tPreSpikeM).*exp(-(tPostSpikeM-tPreSpikeM)/50E-3)-...
-                heaviside(-(tPostSpikeM-tPreSpikeM)).*exp((tPostSpikeM-tPreSpikeM)/50E-3);
+    deltaT = tPostSpikeM-tPreSpikeM
+    delta_wts = heaviside(deltaT).*exp(-(deltaT)/5E-3)-...
+                heaviside(-(deltaT)).*exp((deltaT)/5E-3);
     %idZero = find(tPreSpike(spikedNeurons) == t);
-    %delta_wts(idZero) =1;
-    wts= wts+delta_wts;   % update weights
+    delta_wts(deltaT==0) = -1;
+    delta_wts
+    %wts= wts+0.1*delta_wts;   % update weights
+    pos = find(delta_wts>0);
+    neg = find(delta_wts<0);
+    wts(pos) = wts(pos)+0.1*delta_wts(pos).*(1-wts(pos));
+    wts(neg) = wts(neg)+0.1*delta_wts(neg).*wts(neg);
     
     
     
