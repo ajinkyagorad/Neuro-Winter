@@ -10,7 +10,7 @@ spikeEvents = 50;
 
 % Neuron Spike Matrix ( Each Row represents a set of spikes)
 % Iin = randi([0 1],inputNeurons,spikeEvents);      % Random Input
-Iin = repmat( [ 1 1 0 0 1 1 1 0 0 0 1 1]',[1 spikeEvents]);
+Iin = repmat( [ 1 0 1 0 1 0 1 0 1 0 1 0]',[1 spikeEvents]);
 %Iin = 1*xor(Iin,randi([0,1],size(Iin)));
 %Iin = 0.9*Iin+0.1;
 Tspike = sort(randperm(300,spikeEvents))*1E-3;    % Times for input Iin spikes (must be unique)
@@ -26,8 +26,8 @@ wts = (Wmax-Wmin)*rand(outputNeurons,inputNeurons)+Wmin;     % Weights matrix fo
 Tstep = 1E-3;
 Tsim = 300E-3;
 tau = 5E-3;
-tauLTP = 5E-3
-tauLTD = 10E-3;
+tauLTP = 10E-3
+tauLTD = 30E-3;
 IoutPlot = [];
 TimePlot = [];
 spikedPlot = [];
@@ -89,7 +89,7 @@ for t=Tstep:Tstep:Tsim
     %Add weighted contribution of current into weight change
     %delta_wts = (delta_wts.*repmat(Iinput',[outputNeurons 1]));
    
-    wts= wts+0.1*delta_wts.*(Wmax-wts).*(wts-Wmin).*heaviside((wts-Wmin).*(Wmax-wts));   % update weights
+    wts= wts+0.2*delta_wts.*(Wmax-wts).*(wts-Wmin).*heaviside((wts-Wmin).*(Wmax-wts));   % update weights
 %     pos = find(delta_wts>0);
 %     neg = find(delta_wts<0);
 %     wts(pos) = wts(pos)+0.1*delta_wts(pos).*(1-wts(pos));
